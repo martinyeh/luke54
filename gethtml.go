@@ -25,35 +25,35 @@ type ForumHandler struct {
 }
 
 type ForumData struct {
-    Title string
-    Catg string
-    Page string
+    title string
+    catg string
+    page string
 }
 
-type CatgHandler struct {
+type catgHandler struct {
     	
 }
 
 type Message struct {
-    Title string
-    Image string
-    Url string
+    title string
+    iurl string
+    curl string
 }
 
 func (hf *ForumHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	r.ParseForm()
 	fd := ForumData{}
-	fd.Title = "福音真理"
-	fd.Catg = "9"
-	fd.Page = "2"
+	fd.title = "福音真理"
+	fd.catg = "9"
+	fd.page = "2"
 
 	s := ""
 	b, _ := json.Marshal(fd)
 	s += fmt.Sprintf("%s,", b)	
 
-	fd.Title = "福音小品"
-	fd.Catg = "10"
-	fd.Page = "3"	
+	fd.title = "福音小品"
+	fd.catg = "10"
+	fd.page = "3"	
 
 	b, _ = json.Marshal(fd)
 	s += fmt.Sprintf("%s", b)
@@ -61,7 +61,7 @@ func (hf *ForumHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "[%s]", s)
 }
 
-func (hf *CatgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
+func (hf *catgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	r.ParseForm()                     // Parses the request body
     	catg := r.Form.Get("catg") 
@@ -99,11 +99,11 @@ func (hf *CatgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 			for _, attr := range n.Attr{
 				fmt.Println("attr.Val:" , attr.Val);
 				if strings.Contains( attr.Val, "og:title"){
-					m.Title = n.Attr[1].Val	
-					m.Image = ""				
-				}else if strings.Contains( attr.Val, "og:image"){
-					m.Image = n.Attr[1].Val	
-					msgmap[m.Title]	= m			
+					m.title = n.Attr[1].Val	
+					m.iurl = ""				
+				}else if strings.Contains( attr.Val, "og:iurl"){
+					m.iurl = n.Attr[1].Val	
+					msgmap[m.title]	= m			
 				}
 			}
 	
@@ -116,7 +116,7 @@ func (hf *CatgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 				fmt.Println("attr.Val:" , attr.Val);
 				if _, ok := msgmap[attr.Val]; ok {
 					 m := msgmap[attr.Val]
-					 m.Url = n.Attr[0].Val	
+					 m.curl = n.Attr[0].Val	
 					 msgmap[attr.Val] = m										
 				}
 			}
@@ -151,7 +151,7 @@ func main() {
 	//fmt.Println(string(body))
 
 
-	http.Handle("/category", &CatgHandler{})
+	http.Handle("/category", &catgHandler{})
 	http.Handle("/forum", &ForumHandler{})
 
 	fmt.Println("server start...")
