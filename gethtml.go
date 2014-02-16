@@ -9,8 +9,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"strings"
-	//transform "code.google.com/p/go-html-transform/html/transform"
-	//h5 "code.google.com/p/go-html-transform/h5"
 	html "code.google.com/p/go.net/html"
 ) 
 
@@ -25,35 +23,39 @@ type ForumHandler struct {
 }
 
 type ForumData struct {
-    title string
-    catg string
-    page string
+    Title string    `json:"title"` 
+    Catg string	   `json:"catg"`
+    Page string    `json:"page"`
+    Fid string `json:"fid"`
 }
 
-type catgHandler struct {
+type CatgHandler struct {
     	
 }
 
 type Message struct {
-    title string
-    iurl string
-    curl string
+    Title string `json:"title"`
+    Iurl string `json:"iurl"`
+    Curl string `json:"curl"`
+    Fid string `json:"fid"`
 }
 
 func (hf *ForumHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	r.ParseForm()
 	fd := ForumData{}
-	fd.title = "福音真理"
-	fd.catg = "9"
-	fd.page = "2"
+	fd.Title = "福音真理"
+	fd.Catg = "9"
+	fd.Page = "2"
+	fd.Fid = "92"
 
 	s := ""
 	b, _ := json.Marshal(fd)
 	s += fmt.Sprintf("%s,", b)	
 
-	fd.title = "福音小品"
-	fd.catg = "10"
-	fd.page = "3"	
+	fd.Title = "福音小品"
+	fd.Catg = "10"
+	fd.Page = "3"
+	fd.Fid = "103"	
 
 	b, _ = json.Marshal(fd)
 	s += fmt.Sprintf("%s", b)
@@ -61,7 +63,7 @@ func (hf *ForumHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	fmt.Fprintf(w, "[%s]", s)
 }
 
-func (hf *catgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
+func (hf *CatgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	r.ParseForm()                     // Parses the request body
     	catg := r.Form.Get("catg") 
@@ -88,6 +90,7 @@ func (hf *catgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 	doc, _ := html.Parse(reader)
 
 	m := Message{}
+	m.Fid = catg+page
 	//var msgmap map[string]Message
 	msgmap := make(map[string]Message)
 
@@ -99,11 +102,11 @@ func (hf *catgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 			for _, attr := range n.Attr{
 				fmt.Println("attr.Val:" , attr.Val);
 				if strings.Contains( attr.Val, "og:title"){
-					m.title = n.Attr[1].Val	
-					m.iurl = ""				
-				}else if strings.Contains( attr.Val, "og:iurl"){
-					m.iurl = n.Attr[1].Val	
-					msgmap[m.title]	= m			
+					m.Title = n.Attr[1].Val	
+					m.Iurl = ""				
+				}else if strings.Contains( attr.Val, "og:image"){
+					m.Iurl = n.Attr[1].Val	
+					msgmap[m.Title]	= m			
 				}
 			}
 	
@@ -116,7 +119,7 @@ func (hf *catgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 				fmt.Println("attr.Val:" , attr.Val);
 				if _, ok := msgmap[attr.Val]; ok {
 					 m := msgmap[attr.Val]
-					 m.curl = n.Attr[0].Val	
+					 m.Curl = n.Attr[0].Val	
 					 msgmap[attr.Val] = m										
 				}
 			}
@@ -130,8 +133,8 @@ func (hf *catgHandler) ServeHTTP(w http.ResponseWriter, r *http.Request){
 
 	fmt.Println("msgmap:" , msgmap);
 	var s string
-	for _, value := range msgmap {
-	    //fmt.Println("Key:", key, "Value:", value)
+	for key, value := range msgmap {
+	    fmt.Println("Key:", key, "Value:", value)
 	    b, _ := json.Marshal(value)
 	    s += fmt.Sprintf("%s,", b)		
 	}
@@ -151,7 +154,7 @@ func main() {
 	//fmt.Println(string(body))
 
 
-	http.Handle("/category", &catgHandler{})
+	http.Handle("/category", &CatgHandler{})
 	http.Handle("/forum", &ForumHandler{})
 
 	fmt.Println("server start...")
